@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Aizawa Attractor</title>
+    <style>
+        body { 
+            margin: 0;
+            overflow: hidden;
+            background: black;
+        }
+        #info {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            max-width: 400px;
+            backdrop-filter: blur(4px);
+        }
+        h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+        }
+        p {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        .controls {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>Aizawa Attractor</h1>
+        <p>A three-dimensional chaotic system discovered by Yoji Aizawa, visualized with 100,000 points and dynamic coloring.</p>
+        <p class="controls">Drag to rotate • Scroll to zoom • Right-click to pan</p>
+    </div>
+
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // Aizawa Attractor parameters
+        const a = 0.95;
+        const b = 0.7;
+        const c = 0.6;
+        const d = 3.5;
+        const e = 0.25;
+        const f = 0.1;
+
+        // Generate points
+        const points = [];
+        let x = 0.1;
+        let y = 0;
+        let z = 0;
+        const dt = 0.01;
+        const numPoints = 100000;
+
+        for (let i = 0; i < numPoints; i++) {
+            // Aizawa system equations
+            const dx = (z - b) * x - d * y;
+            const dy = d * x + (z - b) * y;
+            const dz = c + a * z - z * z * z / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x;
+
+            x += dx * dt;
+            y += dy * dt;
+            z += dz * dt;
+
+            points.push(new THREE.Vector3(x, y, z));
+        }
+
+        // Create geometry
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        // Create gradient colors
+        const colors = new Float32Array(numPoints * 3);
+        for (let i = 0; i < numPoints; i++) {
+            const t = i / numPoints;
+            // Create a more vibrant color palette
+            colors[i * 3] = 0.5 + 0.5 * Math.sin(t * 5 + 1);     // R
+            colors[i * 3 + 1] = 0.5 + 0.5 * Math.cos(t * 3 + 2); // G
+            colors[i * 3 + 2] = 0.7 + 0.3 * Math.sin(t * 7);     // B
+        }
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Material with vertex colors
+        const material = new THREE.PointsMaterial({
+            size: 0.01,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+        });
+
+        // Create points system
+        const pointSystem = new THREE.Points(geometry, material);
+        scene.add(pointSystem);
+
+        // Position camera
+        camera.position.set(5, 5, 5);
+        camera.lookAt(0, 0, 0);
+
+        // Add subtle ambient light
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            pointSystem.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        function handleResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        window.addEventListener('resize', handleResize);
+        animate();
+    </script>
+</body>
+</html>
