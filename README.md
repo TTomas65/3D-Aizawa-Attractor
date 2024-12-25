@@ -6,6 +6,10 @@
 
 This project presents an interactive 3D visualization of the Aizawa attractor, which is a chaotic system described by three differential equations. The visualization is created using Three.js and React.
 
+![Running image](Images/Screen01a.jpg)
+
+Demo: https://fastidious-ganache-59cac3.netlify.app/
+
 ### Features
 
 - 3D visualization using Three.js
